@@ -1,10 +1,12 @@
-import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
+import { DocumentList } from "@/components/document-list"
+import { listDocuments } from "@/lib/documents"
 
-export default function Home() {
+export default async function Home() {
+  const documents = await listDocuments()
+
   return (
-    <div className="flex h-screen w-full overflow-hidden text-neutral-900">
-      <SimpleEditor />
-    </div>
-  );
+    <main className="min-h-screen bg-neutral-50 text-neutral-900">
+      <DocumentList initialDocuments={documents} />
+    </main>
+  )
 }
-

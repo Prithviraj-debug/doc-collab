@@ -16,8 +16,9 @@ import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
 import Collaboration from "@tiptap/extension-collaboration"
 import * as Y from "yjs"
-import { WebsocketProvider } from "y-websocket"
 import { IndexeddbPersistence } from 'y-indexeddb'
+
+import { useSyncStatus } from "@/hooks/use-sync-status"
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -78,45 +79,43 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
-import content from "@/components/tiptap-templates/simple/data/content.json"
-
 const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
   isMobile,
   save,
+  connectionState,
+  hasPendingChanges,
 }: {
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
   save: () => void
+  connectionState: string
+  hasPendingChanges: boolean
 }) => {
-  const [isOnline, setIsOnline] = useState(false)
+  const statusLabel =
+    connectionState === "connected"
+      ? "Connected"
+      : connectionState === "syncing"
+        ? "Syncing…"
+        : connectionState === "connecting"
+          ? "Connecting…"
+          : "Offline"
 
-  useEffect(() => {
-    // check wheater connected to internet
-    const checkOnline = () => {
-      setIsOnline(navigator.onLine)
-    }
-    checkOnline()
-
-    window.addEventListener("online", checkOnline)
-    window.addEventListener("offline", checkOnline)
-
-    return () => {
-      window.removeEventListener("online", checkOnline)
-      window.removeEventListener("offline", checkOnline)
-    }
-  }, [])
+  const statusClass =
+    connectionState === "connected"
+      ? "text-green-500"
+      : connectionState === "syncing" || connectionState === "connecting"
+        ? "text-yellow-500"
+        : "text-red-500"
 
   return (
     <>
-      <div>
-        {isOnline ? (
-          <div className="text-green-500 text-sm font-semibold">Online</div>
-        ) : (
-          <div className="text-red-500 text-sm font-semibold">Offline</div>
-        )}
+      <div className="flex items-center gap-2">
+        <span className={`text-sm font-semibold ${statusClass}`}>
+          {statusLabel}
+        </span>
       </div>
       <Button variant="ghost" onClick={save}>
         Save
@@ -218,7 +217,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor() {
+export function SimpleEditor({ documentId }: { documentId: string }) {
   const [mounted, setMounted] = useState(false)
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
@@ -227,35 +226,43 @@ export function SimpleEditor() {
   )
   const toolbarRef = useRef<HTMLDivElement>(null)
 
-  // 1. Initialize Yjs document and WebSocket provider inside state to keep them stable
+  // Yjs document created once per component instance / document id.
   const [ydoc] = useState(() => new Y.Doc())
-  const wsProvider = new HocuspocusProvider({
-    url: "wss://doc-collab-ws.onrender.com",
-    name: "my-room",
-    document: ydoc,
-  })
 
+  // Room name + IndexedDB key must match the Postgres document id.
+  const [wsProvider] = useState(
+    () =>
+      new HocuspocusProvider({
+        url:
+          process.env.NEXT_PUBLIC_HOCUSPOCUS_URL ?? "ws://localhost:1234",
+        name: documentId,
+        document: ydoc,
+      })
+  )
 
   const [indexDbProvider] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return new IndexeddbPersistence("y-document-content", ydoc)
+    if (typeof window !== "undefined") {
+      return new IndexeddbPersistence(`y-doc-${documentId}`, ydoc)
     }
     return null
   })
 
+  const { connectionState, hasPendingChanges } = useSyncStatus(
+    wsProvider,
+    ydoc
+  )
+
   useEffect(() => {
     const handleSynced = () => {
-
-      // read from the Y.Doc's shared type, not the provider
       const xmlFragment = ydoc.getXmlFragment('default')
       console.log('synced content:', xmlFragment.toJSON())
     }
     if (!indexDbProvider) return
     indexDbProvider.on('synced', handleSynced)
     return () => indexDbProvider.off('synced', handleSynced)
-  }, [wsProvider, ydoc])
+  }, [indexDbProvider, ydoc])
 
-  // 2. Clean up connections on component unmount
+  // Mount flag + cleanup on unmount.
   useEffect(() => {
     setMounted(true)
     return () => {
@@ -263,7 +270,8 @@ export function SimpleEditor() {
       indexDbProvider?.destroy()
       ydoc.destroy()
     }
-  }, [ydoc, wsProvider, indexDbProvider])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -277,7 +285,6 @@ export function SimpleEditor() {
       },
     },
     extensions: [
-      // 3. Disable the default StarterKit history so Yjs handles undo/redo correctly
       StarterKit.configure({
         undoRedo: false,
         horizontalRule: false,
@@ -286,7 +293,6 @@ export function SimpleEditor() {
           enableClickSelection: true,
         },
       }),
-      // 4. Configure Tiptap Collaboration with the Yjs document
       Collaboration.configure({
         document: ydoc,
       }),
@@ -328,12 +334,13 @@ export function SimpleEditor() {
     console.log("Saving content:", html)
 
     if (html) {
-      ydoc.getXmlFragment('default').toJSON()
+      // TODO: this is where a named version snapshot should be captured
+      // (e.g. send Y.encodeStateAsUpdate(ydoc) to the server to store as
+      // a labeled checkpoint) — not yet wired up.
       alert("Document saved!")
     }
   }
 
-  // save content to local storage
   useEffect(() => {
     if (!editor) return
 
@@ -371,6 +378,8 @@ export function SimpleEditor() {
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
               save={save}
+              connectionState={connectionState}
+              hasPendingChanges={hasPendingChanges}
             />
           ) : (
             <MobileToolbarContent
