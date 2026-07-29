@@ -112,14 +112,12 @@ const MainToolbarContent = ({
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        <span className={`text-sm font-semibold ${statusClass}`}>
+      <ToolbarGroup>
+        <span className={`text-sm font-medium px-1 ${statusClass}`}>
           {statusLabel}
         </span>
-      </div>
-      <Button variant="ghost" onClick={save}>
-        Save
-      </Button>
+      </ToolbarGroup>
+
       <Spacer />
 
       <ToolbarGroup>
@@ -337,6 +335,8 @@ export function SimpleEditor({ documentId }: { documentId: string }) {
       // TODO: this is where a named version snapshot should be captured
       // (e.g. send Y.encodeStateAsUpdate(ydoc) to the server to store as
       // a labeled checkpoint) — not yet wired up.
+      const update = Y.encodeStateAsUpdate(ydoc)
+      console.log("Update:", update)
       alert("Document saved!")
     }
   }

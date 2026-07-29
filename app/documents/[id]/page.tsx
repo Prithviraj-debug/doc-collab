@@ -1,27 +1,33 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { auth } from "@/auth"
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
-import { getDocument, getHistory } from "@/lib/documents"
+import { getDocumentForUser } from "@/lib/documents"
 import { DocumentTitle } from "@/components/document-title"
+import Auth from "@/components/auth"
 
 type PageProps = {
   params: Promise<{ id: string }>
 }
 
 export default async function DocumentPage({ params }: PageProps) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    redirect("/")
+  }
+
   const { id } = await params
-  const document = await getDocument(id)
-  const history = await getHistory(id)
-  console.log(history)
+  const document = await getDocumentForUser(id, session.user.id)
+
   if (!document) {
     notFound()
   }
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden text-neutral-900">
-      <div className="flex items-center gap-3 border-b border-neutral-200 bg-white px-3 py-2">
+    <div className="flex h-screen w-full flex-col overflow-hidden">
+      <div className="flex items-center gap-3 border-b border-neutral-200 bg-white px-3 py-2 text-neutral-900">
         <Link
-          href="/"
+          href="/documents"
           className="rounded px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
         >
           All documents
@@ -30,7 +36,7 @@ export default async function DocumentPage({ params }: PageProps) {
           /
         </span>
         <DocumentTitle documentId={document.id} initialTitle={document.title} />
-        {/* <DocHistory history={history} /> */}
+        <Auth />
       </div>
 
       <div className="min-h-0 flex-1">
