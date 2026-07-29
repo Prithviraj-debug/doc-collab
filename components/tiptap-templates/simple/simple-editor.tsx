@@ -230,7 +230,7 @@ export function SimpleEditor() {
   // 1. Initialize Yjs document and WebSocket provider inside state to keep them stable
   const [ydoc] = useState(() => new Y.Doc())
   const wsProvider = new HocuspocusProvider({
-    url: "ws://localhost:1234",
+    url: "wss://doc-collab-ws.onrender.com",
     name: "my-room",
     document: ydoc,
   })
