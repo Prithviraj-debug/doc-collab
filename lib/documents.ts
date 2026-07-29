@@ -157,3 +157,74 @@ export async function getHistory(id: string): Promise<HistoryRow[]> {
   )
   return rows.map(mapHistory)
 }
+
+export type InviteRole = "viewer" | "editor"
+
+export class InviteError extends Error {
+  constructor(
+    message: string,
+    readonly code: "NOT_FOUND" | "FORBIDDEN" | "ALREADY_MEMBER" | "INVALID_ROLE"
+  ) {
+    super(message)
+    this.name = "InviteError"
+  }
+}
+
+/**
+ * Invites an existing Auth.js user (by email) into a document.
+ * Caller must already be an owner or editor of the document.
+ */
+export async function inviteUserToDocumentByEmail(
+  documentId: string,
+  inviterUserId: string | number,
+  email: string,
+  role: InviteRole
+): Promise<void> {
+  if (role !== "viewer" && role !== "editor") {
+    throw new InviteError("Invalid role", "INVALID_ROLE")
+  }
+
+  const { rows: membership } = await pool.query<{ role: string }>(
+    `SELECT role
+     FROM document_members
+     WHERE document_id = $1 AND user_id = $2`,
+    [documentId, inviterUserId]
+  )
+
+  const inviterRole = membership[0]?.role
+  if (inviterRole !== "owner" && inviterRole !== "editor") {
+    throw new InviteError("You cannot invite people to this document", "FORBIDDEN")
+  }
+
+  const { rows: users } = await pool.query<{ id: string }>(
+    `SELECT id FROM users WHERE lower(email) = lower($1)`,
+    [email.trim()]
+  )
+  const invitee = users[0]
+  if (!invitee) {
+    throw new InviteError(
+      "No DocCollab account found for that email. They need to sign in once first.",
+      "NOT_FOUND"
+    )
+  }
+
+  if (String(invitee.id) === String(inviterUserId)) {
+    throw new InviteError("You already have access to this document", "ALREADY_MEMBER")
+  }
+
+  const { rows: existing } = await pool.query<{ role: string }>(
+    `SELECT role
+     FROM document_members
+     WHERE document_id = $1 AND user_id = $2`,
+    [documentId, invitee.id]
+  )
+  if (existing[0]) {
+    throw new InviteError("That person already has access", "ALREADY_MEMBER")
+  }
+
+  await pool.query(
+    `INSERT INTO document_members (document_id, user_id, role)
+     VALUES ($1, $2, $3)`,
+    [documentId, invitee.id, role]
+  )
+}

@@ -5,6 +5,7 @@ import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor
 import { getDocumentForUser } from "@/lib/documents"
 import { DocumentTitle } from "@/components/document-title"
 import Auth from "@/components/auth"
+import InviteUser from "@/components/invite-user"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -36,7 +37,10 @@ export default async function DocumentPage({ params }: PageProps) {
           /
         </span>
         <DocumentTitle documentId={document.id} initialTitle={document.title} />
-        <Auth />
+        <div className="ml-auto flex items-center gap-2">
+          <InviteUser documentId={document.id} />
+          <Auth />
+        </div>
       </div>
 
       <div className="min-h-0 flex-1">
