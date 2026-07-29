@@ -15,8 +15,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DocCollab",
-  description: "Collabrative Docs app",
+  title: {
+    default: "DocCollab",
+    template: "%s · DocCollab",
+  },
+  description: "Collaborative document editing in real time.",
+  applicationName: "DocCollab",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  ),
+  openGraph: {
+    title: "DocCollab",
+    description: "Write together in real time.",
+    siteName: "DocCollab",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DocCollab",
+    description: "Write together in real time.",
+  },
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
