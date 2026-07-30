@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 import { HocuspocusProvider } from '@hocuspocus/provider'
+import { jsPDF } from 'jspdf'
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
@@ -79,6 +80,20 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
+const DownloadIcon = () => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M12 2a1 1 0 011 1v10.59l2.3-2.29a1 1 0 111.4 1.41l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.41L11 13.59V3a1 1 0 011-1zM5 19a1 1 0 000 2h14a1 1 0 100-2H5z"/>
+    </svg>
+  )
+}
+
 const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
@@ -86,6 +101,7 @@ const MainToolbarContent = ({
   save,
   connectionState,
   hasPendingChanges,
+  download
 }: {
   onHighlighterClick: () => void
   onLinkClick: () => void
@@ -93,6 +109,7 @@ const MainToolbarContent = ({
   save: () => void
   connectionState: string
   hasPendingChanges: boolean
+  download: () => void
 }) => {
   const statusLabel =
     connectionState === "connected"
@@ -113,9 +130,12 @@ const MainToolbarContent = ({
   return (
     <>
       <ToolbarGroup>
+        <Button variant="ghost" onClick={download}><DownloadIcon />Download</Button>
+        <ToolbarSeparator />
         <span className={`text-sm font-medium px-1 ${statusClass}`}>
           {statusLabel}
         </span>
+
       </ToolbarGroup>
 
       <Spacer />
@@ -179,9 +199,9 @@ const MainToolbarContent = ({
 
       {isMobile && <ToolbarSeparator />}
 
-      <ToolbarGroup>
+      {/* <ToolbarGroup>
         <ThemeToggle />
-      </ToolbarGroup>
+      </ToolbarGroup> */}
     </>
   )
 }
@@ -270,6 +290,25 @@ export function SimpleEditor({ documentId }: { documentId: string }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const download = async () => {
+    if (!editor) return
+  
+    const pdf = new jsPDF()
+  
+    const element = document.createElement("div")
+    element.innerHTML = editor.getHTML()
+  
+    await pdf.html(element, {
+      callback: (doc) => {
+        doc.save("content.pdf")
+      },
+      x: 10,
+      y: 10,
+      width: 190,
+      windowWidth: 800,
+    })
+  }
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -378,6 +417,7 @@ export function SimpleEditor({ documentId }: { documentId: string }) {
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
               save={save}
+              download={download}
               connectionState={connectionState}
               hasPendingChanges={hasPendingChanges}
             />
