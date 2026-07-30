@@ -65,8 +65,8 @@ export default async function Home() {
               Documents that keep up with your team.
             </h1>
             <p className="landing-lede">
-              Write, edit, and sync in real time — so every draft stays one
-              shared source of truth.
+              Write and sync in real time — then ask AI to clarify, tighten, or
+              proof the shared draft.
             </p>
             <div className="landing-cta">
               {isSignedIn ? (
@@ -129,21 +129,54 @@ export default async function Home() {
             <li>
               <span className="landing-step-index">03</span>
               <div>
-                <h3>Stay in sync</h3>
+                <h3>Ask AI</h3>
                 <p>
-                  Offline changes catch up when you reconnect, without merge
-                  drama.
+                  Open Ask AI for summaries, clarity tips, and a quick grammar
+                  pass on the live draft.
                 </p>
               </div>
             </li>
           </ol>
         </section>
 
+        <section id="ask-ai" className="landing-section landing-ai">
+          <div className="landing-ai-copy">
+            <h2 className="landing-section-title">Ask AI about this draft</h2>
+            <p className="landing-section-lede">
+              The assistant reads your current document and answers in context —
+              so help stays tied to what the team is writing now.
+            </p>
+          </div>
+          <div className="landing-ai-panel" aria-hidden="true">
+            <div className="landing-ai-panel-header">
+              <span className="landing-ai-panel-title">Document assistant</span>
+              <span className="landing-ai-panel-status">Ask about this document</span>
+            </div>
+            <div className="landing-ai-panel-body">
+              <p className="landing-ai-bubble landing-ai-bubble-user">
+                What is the main idea of the document?
+              </p>
+              <div className="landing-ai-bubble landing-ai-bubble-assistant">
+                <span className="landing-ai-assistant-label">Assistant</span>
+                <p>
+                  Your draft centers on a shared writing space: live edits,
+                  clear structure, and an assistant that can summarize or
+                  tighten the page.
+                </p>
+              </div>
+            </div>
+            <div className="landing-ai-panel-footer">
+              <span className="landing-ai-input-mock">Ask about this document…</span>
+              <span className="landing-ai-send-mock">Ask AI</span>
+            </div>
+          </div>
+        </section>
+
         <section className="landing-section landing-section-alt">
           <h2 className="landing-section-title">Built for focused writing</h2>
           <p className="landing-section-lede">
-            A clean editor with the essentials — formatting, structure, and
-            live collaboration — without the clutter.
+            A clean editor with live collaboration and an AI assistant —
+            without the clutter.
           </p>
           <ul className="landing-features">
             <li>
@@ -154,10 +187,10 @@ export default async function Home() {
               </p>
             </li>
             <li>
-              <h3>Rich text, simply</h3>
+              <h3>Document-aware AI</h3>
               <p>
-                Headings, lists, highlights, links, and images — ready when you
-                need them, quiet when you do not.
+                Ask for the main idea, readability tips, or a grammar check —
+                grounded in the HTML of the open page.
               </p>
             </li>
             <li>
@@ -171,9 +204,10 @@ export default async function Home() {
         </section>
 
         <section className="landing-closing">
-          <h2 className="landing-closing-title">Start writing together</h2>
+          <h2 className="landing-closing-title">Write together. Ask smarter.</h2>
           <p className="landing-closing-lede">
-            Open DocCollab and turn the next draft into a shared workspace.
+            Open DocCollab for a shared draft — and an assistant that already
+            knows what is on the page.
           </p>
           {isSignedIn ? (
             <Link href="/documents" className="landing-btn landing-btn-primary">
@@ -196,7 +230,7 @@ export default async function Home() {
 
       <footer className="landing-footer">
         <span>DocCollab</span>
-        <span>Collaborative documents in real time</span>
+        <span>Real-time documents with an AI assistant</span>
       </footer>
     </div>
   )

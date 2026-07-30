@@ -19,21 +19,23 @@ export const metadata: Metadata = {
     default: "DocCollab",
     template: "%s · DocCollab",
   },
-  description: "Collaborative document editing in real time.",
+  description:
+    "Collaborative document editing in real time, with an AI assistant that understands your draft.",
   applicationName: "DocCollab",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
   ),
   openGraph: {
     title: "DocCollab",
-    description: "Write together in real time.",
+    description: "Write together in real time — and ask AI about the draft.",
     siteName: "DocCollab",
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "DocCollab",
-    description: "Write together in real time.",
+    description: "Write together in real time — and ask AI about the draft.",
   },
   icons: {
     icon: [{ url: "/icon.png", type: "image/png" }],
