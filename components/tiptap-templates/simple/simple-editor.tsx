@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import { jsPDF } from 'jspdf'
@@ -18,8 +18,10 @@ import { Selection } from "@tiptap/extensions"
 import Collaboration from "@tiptap/extension-collaboration"
 import * as Y from "yjs"
 import { IndexeddbPersistence } from 'y-indexeddb'
+import { CollaborationCaret } from "@tiptap/extension-collaboration-caret"
 
 import { useSyncStatus } from "@/hooks/use-sync-status"
+import Chat from "@/components/ai-chat"
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -76,6 +78,7 @@ import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
 
 // --- Lib ---
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
+import { colorFromUserId } from "@/lib/collaboration-user"
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
@@ -235,7 +238,13 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ documentId }: { documentId: string }) {
+export function SimpleEditor({
+  documentId,
+  user,
+}: {
+  documentId: string
+  user: { id: string; name?: string | null; email?: string | null }
+}) {
   const [mounted, setMounted] = useState(false)
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
@@ -243,6 +252,14 @@ export function SimpleEditor({ documentId }: { documentId: string }) {
     "main"
   )
   const toolbarRef = useRef<HTMLDivElement>(null)
+
+  const collaborationUser = useMemo(
+    () => ({
+      name: user.name?.trim() || user.email?.trim() || "Anonymous",
+      color: colorFromUserId(user.id),
+    }),
+    [user.id, user.name, user.email]
+  )
 
   // Yjs document created once per component instance / document id.
   const [ydoc] = useState(() => new Y.Doc())
@@ -330,8 +347,32 @@ export function SimpleEditor({ documentId }: { documentId: string }) {
           enableClickSelection: true,
         },
       }),
+      // Collaboration must be registered before CollaborationCaret so the
+      // Yjs sync plugin exists when caret decorations are created.
       Collaboration.configure({
         document: ydoc,
+      }),
+      CollaborationCaret.configure({
+        provider: wsProvider,
+        user: collaborationUser,
+        render: (caretUser) => {
+          const cursor = document.createElement("span")
+          cursor.classList.add("collaboration-carets__caret")
+          cursor.style.borderColor = caretUser.color
+
+          // Keep the caret from collapsing to 0 height (required for borders).
+          cursor.appendChild(document.createTextNode("\u2060"))
+
+          const label = document.createElement("div")
+          label.classList.add("collaboration-carets__label")
+          label.style.backgroundColor = caretUser.color
+          label.style.color = "#fff"
+          label.textContent = caretUser.name
+          cursor.appendChild(label)
+
+          cursor.appendChild(document.createTextNode("\u2060"))
+          return cursor
+        },
       }),
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -352,6 +393,12 @@ export function SimpleEditor({ documentId }: { documentId: string }) {
       }),
     ],
   })
+
+  // Keep awareness in sync if the session display name changes.
+  useEffect(() => {
+    if (!editor || !wsProvider.awareness) return
+    editor.commands.updateUser(collaborationUser)
+  }, [editor, wsProvider, collaborationUser])
 
   const rect = useCursorVisibility({
     editor,
@@ -434,6 +481,8 @@ export function SimpleEditor({ documentId }: { documentId: string }) {
           role="presentation"
           className="simple-editor-content"
         />
+
+        <Chat documentId={documentId} user={user} />
       </EditorContext.Provider>
     </div>
   )

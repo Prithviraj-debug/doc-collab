@@ -99,31 +99,34 @@
      COLLABORATION
      ===================== */
 .tiptap.ProseMirror {
-  .collaboration-carets {
-    &__caret {
-      border-right: 1px solid transparent;
-      border-left: 1px solid transparent;
-      pointer-events: none;
-      margin-left: -1px;
-      margin-right: -1px;
-      position: relative;
-      word-break: normal;
-    }
+  .collaboration-carets__caret {
+    border-left: 1px solid currentColor;
+    border-right: 1px solid currentColor;
+    margin-left: -1px;
+    margin-right: -1px;
+    pointer-events: none;
+    position: relative;
+    word-break: normal;
+  }
 
-    &__label {
-      color: var(--tt-collaboration-carets-label);
-      border-radius: 0.25rem;
-      border-bottom-left-radius: 0;
-      font-size: 0.75rem;
-      font-weight: 600;
-      left: -1px;
-      line-height: 1;
-      padding: 0.125rem 0.375rem;
-      position: absolute;
-      top: -1.3em;
-      user-select: none;
-      white-space: nowrap;
-    }
+  .collaboration-carets__label {
+    color: #fff;
+    border-radius: 0.25rem 0.25rem 0.25rem 0;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 600;
+    left: -1px;
+    line-height: 1;
+    padding: 0.125rem 0.375rem;
+    position: absolute;
+    top: -1.4em;
+    user-select: none;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .collaboration-carets__selection {
+    pointer-events: none;
   }
 }
 

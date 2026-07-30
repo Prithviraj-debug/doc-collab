@@ -37,7 +37,7 @@ export default async function DocumentPage({ params }: PageProps) {
       />
 
       <main id="main-content" className="min-h-0 flex-1" tabIndex={-1}>
-        <SimpleEditor documentId={document.id} />
+        <SimpleEditor documentId={document.id} user={session.user} />
       </main>
     </div>
   )
