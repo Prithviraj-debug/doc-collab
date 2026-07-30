@@ -37,3 +37,8 @@ Hocuspocus server
 2. [Editor](./editor-layer.md) — what users type into
 3. [Sync / transport](./sync-transport-layer.md) — how edits reach other people and the database
 4. [AI](./ai-layer.md) — how the assistant uses document context
+
+
+## Other repos
+
+Check out sync layer - [https://github.com/Prithviraj-debug/doc-collab-ws]
