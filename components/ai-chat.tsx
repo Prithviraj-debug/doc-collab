@@ -62,7 +62,7 @@ export default function Chat({
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="absolute bottom-4 right-4 z-50 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-teal-800 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition hover:bg-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 focus-visible:ring-offset-2"
+          className="absolute md:bottom-4 bottom-12 right-4 z-50 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-teal-800 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition hover:bg-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 focus-visible:ring-offset-2"
           aria-label="Open AI chat"
         >
           <ChatIcon />

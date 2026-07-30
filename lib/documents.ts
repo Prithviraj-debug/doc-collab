@@ -24,6 +24,37 @@ export type HistoryRow = {
   user_id: string
 }
 
+export type SnapshotRow = {
+  id: number
+  document_id: string
+  created_at: Date | string
+  snapshot: Buffer
+}
+
+/** Client-safe snapshot metadata (no binary payload). */
+export type SnapshotMeta = {
+  id: number
+  document_id: string
+  created_at: string
+}
+
+function mapSnapshot(row: SnapshotRow): SnapshotRow {
+  return {
+    id: row.id,
+    document_id: row.document_id,
+    created_at: new Date(row.created_at).toISOString(),
+    snapshot: row.snapshot,
+  }
+}
+
+export function toSnapshotMeta(row: SnapshotRow): SnapshotMeta {
+  return {
+    id: row.id,
+    document_id: row.document_id,
+    created_at: new Date(row.created_at).toISOString(),
+  }
+}
+
 function mapDocument(row: DbDocument): DocumentRow {
   return {
     id: row.id,
@@ -227,4 +258,15 @@ export async function inviteUserToDocumentByEmail(
      VALUES ($1, $2, $3)`,
     [documentId, invitee.id, role]
   )
+}
+
+
+export async function getSnapshots(documentId: string): Promise<SnapshotRow[]> {
+  const { rows } = await pool.query<SnapshotRow>(
+    `SELECT id, document_id, created_at, snapshot
+     FROM document_snapshots
+     WHERE document_id = $1`,
+    [documentId]
+  )
+  return rows.map(mapSnapshot)
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import { jsPDF } from 'jspdf'
@@ -74,7 +74,6 @@ import { useWindowSize } from "@/hooks/use-window-size"
 import { useCursorVisibility } from "@/hooks/use-cursor-visibility"
 
 // --- Components ---
-import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle"
 
 // --- Lib ---
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
@@ -82,67 +81,19 @@ import { colorFromUserId } from "@/lib/collaboration-user"
 
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
-
-const DownloadIcon = () => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <path d="M12 2a1 1 0 011 1v10.59l2.3-2.29a1 1 0 111.4 1.41l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.41L11 13.59V3a1 1 0 011-1zM5 19a1 1 0 000 2h14a1 1 0 100-2H5z"/>
-    </svg>
-  )
-}
+import type { ConnectionState } from "@/hooks/use-sync-status"
 
 const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
   isMobile,
-  save,
-  connectionState,
-  hasPendingChanges,
-  download
 }: {
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
-  save: () => void
-  connectionState: string
-  hasPendingChanges: boolean
-  download: () => void
 }) => {
-  const statusLabel =
-    connectionState === "connected"
-      ? "Connected"
-      : connectionState === "syncing"
-        ? "Syncing…"
-        : connectionState === "connecting"
-          ? "Connecting…"
-          : "Offline"
-
-  const statusClass =
-    connectionState === "connected"
-      ? "text-green-500"
-      : connectionState === "syncing" || connectionState === "connecting"
-        ? "text-yellow-500"
-        : "text-red-500"
-
   return (
     <>
-      <ToolbarGroup>
-        <Button variant="ghost" onClick={download}><DownloadIcon />Download</Button>
-        <ToolbarSeparator />
-        <span className={`text-sm font-medium px-1 ${statusClass}`}>
-          {statusLabel}
-        </span>
-
-      </ToolbarGroup>
-
-      <Spacer />
-
       <ToolbarGroup>
         <UndoRedoButton action="undo" />
         <UndoRedoButton action="redo" />
@@ -201,10 +152,6 @@ const MainToolbarContent = ({
       <Spacer />
 
       {isMobile && <ToolbarSeparator />}
-
-      {/* <ToolbarGroup>
-        <ThemeToggle />
-      </ToolbarGroup> */}
     </>
   )
 }
@@ -241,9 +188,16 @@ const MobileToolbarContent = ({
 export function SimpleEditor({
   documentId,
   user,
+  onSyncStatusChange,
+  onDownloadReady,
 }: {
   documentId: string
   user: { id: string; name?: string | null; email?: string | null }
+  onSyncStatusChange?: (status: {
+    connectionState: ConnectionState
+    hasPendingChanges: boolean
+  }) => void
+  onDownloadReady?: (download: () => void) => void
 }) {
   const [mounted, setMounted] = useState(false)
   const isMobile = useIsBreakpoint()
@@ -288,6 +242,10 @@ export function SimpleEditor({
   )
 
   useEffect(() => {
+    onSyncStatusChange?.({ connectionState, hasPendingChanges })
+  }, [connectionState, hasPendingChanges, onSyncStatusChange])
+
+  useEffect(() => {
     const handleSynced = () => {
       const xmlFragment = ydoc.getXmlFragment('default')
       console.log('synced content:', xmlFragment.toJSON())
@@ -308,24 +266,6 @@ export function SimpleEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const download = async () => {
-    if (!editor) return
-  
-    const pdf = new jsPDF()
-  
-    const element = document.createElement("div")
-    element.innerHTML = editor.getHTML()
-  
-    await pdf.html(element, {
-      callback: (doc) => {
-        doc.save("content.pdf")
-      },
-      x: 10,
-      y: 10,
-      width: 190,
-      windowWidth: 800,
-    })
-  }
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -340,7 +280,6 @@ export function SimpleEditor({
     },
     extensions: [
       StarterKit.configure({
-        undoRedo: false,
         horizontalRule: false,
         link: {
           openOnClick: false,
@@ -411,7 +350,29 @@ export function SimpleEditor({
     }
   }, [isMobile, mobileView])
 
-  const save = () => {
+  const download = useCallback(async () => {
+    if (!editor) return
+
+    const pdf = new jsPDF()
+    const element = document.createElement("div")
+    element.innerHTML = editor.getHTML()
+
+    await pdf.html(element, {
+      callback: (doc) => {
+        doc.save("content.pdf")
+      },
+      x: 10,
+      y: 10,
+      width: 190,
+      windowWidth: 800,
+    })
+  }, [editor])
+
+  useEffect(() => {
+    onDownloadReady?.(download)
+  }, [download, onDownloadReady])
+
+  const save = useCallback(() => {
     if (!editor) return
 
     const html = editor.getHTML()
@@ -425,7 +386,7 @@ export function SimpleEditor({
       console.log("Update:", update)
       alert("Document saved!")
     }
-  }
+  }, [editor, ydoc])
 
   useEffect(() => {
     if (!editor) return
@@ -439,7 +400,7 @@ export function SimpleEditor({
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [editor])
+  }, [editor, save])
 
   if (!mounted) {
     return <div className="simple-editor-wrapper" />
@@ -463,10 +424,6 @@ export function SimpleEditor({
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
-              save={save}
-              download={download}
-              connectionState={connectionState}
-              hasPendingChanges={hasPendingChanges}
             />
           ) : (
             <MobileToolbarContent
