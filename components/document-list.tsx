@@ -47,17 +47,14 @@ export function DocumentList({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-12">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium tracking-wide text-neutral-500 uppercase">
-            DocCollab
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-neutral-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
             Documents
           </h1>
-          <p className="mt-2 text-neutral-600">
-            Local-first collaborative editing with background sync.
+          <p className="mt-2 text-sm text-neutral-600 sm:text-base">
+            Open a document to write together, or create a new one.
           </p>
         </div>
 
@@ -65,7 +62,7 @@ export function DocumentList({
           type="button"
           onClick={createDocument}
           disabled={isPending}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/30 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "Creating…" : "New document"}
         </button>
@@ -87,7 +84,7 @@ export function DocumentList({
             <li key={doc.id}>
               <Link
                 href={`/documents/${doc.id}`}
-                className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-neutral-50 focus-visible:bg-neutral-50 focus-visible:outline-none"
+                className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-neutral-50 focus-visible:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-700/25"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-neutral-900">

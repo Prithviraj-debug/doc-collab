@@ -1,10 +1,9 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
 import { getDocumentForUser } from "@/lib/documents"
-import { DocumentTitle } from "@/components/document-title"
-import Auth from "@/components/auth"
+import { AppNavbar } from "@/components/app-navbar"
+import { DocumentBreadcrumb } from "@/components/document-breadcrumb"
 import InviteUser from "@/components/invite-user"
 
 type PageProps = {
@@ -26,26 +25,20 @@ export default async function DocumentPage({ params }: PageProps) {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
-      <div className="flex items-center gap-3 border-b border-neutral-200 bg-white px-3 py-2 text-neutral-900">
-        <Link
-          href="/documents"
-          className="rounded px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-        >
-          All documents
-        </Link>
-        <span className="text-neutral-300" aria-hidden>
-          /
-        </span>
-        <DocumentTitle documentId={document.id} initialTitle={document.title} />
-        <div className="ml-auto flex items-center gap-2">
-          <InviteUser documentId={document.id} />
-          <Auth />
-        </div>
-      </div>
+      <AppNavbar
+        user={session.user}
+        center={
+          <DocumentBreadcrumb
+            documentId={document.id}
+            title={document.title}
+          />
+        }
+        actions={<InviteUser documentId={document.id} />}
+      />
 
-      <div className="min-h-0 flex-1">
+      <main id="main-content" className="min-h-0 flex-1" tabIndex={-1}>
         <SimpleEditor documentId={document.id} />
-      </div>
+      </main>
     </div>
   )
 }

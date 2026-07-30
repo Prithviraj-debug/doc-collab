@@ -75,10 +75,11 @@ const InviteUser = ({ documentId }: { documentId: string }) => {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-800 transition hover:border-teal-700/30 hover:bg-teal-50 hover:text-teal-900"
+        className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-800 transition hover:border-teal-700/30 hover:bg-teal-50 hover:text-teal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/20"
       >
         <InviteIcon />
-        Invite
+        <span className="hidden sm:inline">Invite</span>
+        <span className="sr-only sm:hidden">Invite collaborator</span>
       </button>
 
       <dialog
